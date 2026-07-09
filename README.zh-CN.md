@@ -10,31 +10,12 @@
 
 | 压缩包 | 主机系统 | 内容 | 说明 | SHA256 |
 | --- | --- | --- | --- | --- |
-| `XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.sh` | Linux x86_64 | 自解压安装脚本 | 安装时提示输入路径；默认路径为 `/usr/bin/XUANTIE_DebugServer`；会安装 `DebugServerConsole` 包装命令 | `4B6BBF438E271FA612DA09E17C53155478A35E27EF3175E132127D11712D9EC5` |
-| `XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.tar.gz` | Linux x86_64 | 直接可解压的 `XUANTIE_DebugServer/` 目录树 | 从 `.sh` 安装包载荷中提取，适合不运行安装交互脚本的手动安装 | `226C930FA42BDE56387E04945EC3A4CA9BFA70117D485971C8E9B06DCA7B6A51` |
-| `XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.sh.tar.gz` | Linux x86_64 | `.sh` 安装脚本的压缩副本 | 只包含一个文件：`XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.sh` | `24413810F02160E262A04CF22835ADADF061C120F5AD9A7A4B3F2C821A122194` |
+| `XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.tar.gz` | Linux x86_64 | 直接可解压的 `XUANTIE_DebugServer/` 目录树 | 手动安装包 | `226C930FA42BDE56387E04945EC3A4CA9BFA70117D485971C8E9B06DCA7B6A51` |
 | `XuanTie-DebugServer-windows-V5.18.10-20260603-2008.zip` | Windows | InstallShield 安装包 | 解压后运行 `setup.exe` | `588C5919441C9D6D5CFC18CAB2DB88147ACAB57ABBC06FDD437DBB6B6AC10C8F` |
 
 发布版本为 `V5.18.10`。发布日期 `20260603` 来自上游包文件名。
 
 ## Linux 安装
-
-### 使用安装脚本
-
-```sh
-chmod +x XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.sh
-sudo ./XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.sh -i
-```
-
-安装脚本会提示输入安装路径。如果直接回车，默认使用 `/usr/bin`，并将软件安装到 `/usr/bin/XUANTIE_DebugServer`。
-
-安装脚本还会执行以下操作：
-
-- 写入 `/etc/ld.so.conf.d/csky-debug.conf`
-- 执行 `ldconfig`
-- 创建 `/usr/bin/DebugServerConsole`
-
-### 使用手动解压包
 
 ```sh
 mkdir -p "$HOME/opt"
@@ -49,12 +30,6 @@ export LD_LIBRARY_PATH="$HOME/opt/XUANTIE_DebugServer:${LD_LIBRARY_PATH:-}"
 
 ```sh
 DebugServerConsole.elf --help
-```
-
-如果使用 `.sh` 安装脚本安装，可以使用包装命令：
-
-```sh
-DebugServerConsole --help
 ```
 
 ## Windows 安装
@@ -74,12 +49,6 @@ Linux 下主要可执行文件为：
 
 ```sh
 DebugServerConsole.elf
-```
-
-如果使用 Linux `.sh` 安装脚本安装，包装命令为：
-
-```sh
-DebugServerConsole
 ```
 
 常见调试流程是先启动 DebugServer，再使用匹配的玄铁 / C-SKY 工具链中的 GDB 客户端连接 DebugServer。
@@ -109,7 +78,7 @@ Linux 包内包含以下系列的目标描述 XML 文件：
 ## 注意事项
 
 - 这些是预编译二进制包，不是源码包。
-- 直接可解压的 Linux `.tar.gz` 是从 `.sh` 安装脚本载荷中重新打包得到的。它包含相同的 `XUANTIE_DebugServer/` 目录树，但不会运行安装脚本。
+- Linux `.tar.gz` 包含用于手动安装的 `XUANTIE_DebugServer/` 目录树。
 - Linux 包在 `links/Ck-Link/` 下包含 Ck-Link 固件文件。
 - Linux 包在 `license/libusb/` 下包含 libusb 许可证文件。
 - 某些 Linux 系统可能需要配置 udev 规则或设备权限，普通用户才能访问 USB 调试器。
