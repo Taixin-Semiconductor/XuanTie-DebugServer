@@ -1,0 +1,103 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+set -u
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P) || exit 1
+
+usage() {
+    cat <<'EOF'
+XuanTie DebugServer V5.18.10 for macOS arm64
+Usage: debugserver doctor [--offline]
+       debugserver help
+       debugserver list
+       debugserver activate [--serial SERIAL]
+       debugserver check [--serial SERIAL]
+       debugserver run [DebugServerConsole arguments...]
+
+doctor reports runtime integrity and USB mode; --offline skips USB inspection.
+activate changes one unconfigured CK-Link loader to configuration 1.
+check enters target debug mode and tests registers (CK803SG, 2-wire, 2500 kHz).
+run forwards vendor options; GDB, stepping and flashing are not validated.
+Firmware-update prompts receive "no"; no interactive input is forwarded.
+EOF
+}
+
+host_check() {
+    if [ "$(uname -s)" != Darwin ] || [ "$(uname -m)" != arm64 ]; then
+        echo 'This package requires native Apple Silicon macOS (arm64).' >&2
+        return 1
+    fi
+    version=$(/usr/bin/sw_vers -productVersion) || return 1
+    major=${version%%.*}
+    rest=${version#*.}
+    minor=${rest%%.*}
+    if [ "$major" -lt 14 ] || { [ "$major" -eq 14 ] && [ "$minor" -lt 4 ]; }; then
+        echo 'This pinned runtime requires macOS 14.4 or newer.' >&2
+        return 1
+    fi
+    if [ ! -x /Library/Apple/usr/libexec/oah/RosettaLinux/rosetta ]; then
+        echo 'Rosetta Linux runtime is missing. Install Rosetta using Apple’s installer, then retry.' >&2
+        return 1
+    fi
+}
+
+run_server() {
+    host_check || return 1
+    # Explicitly disable the earlier diagnostic switches even if inherited.
+    # This clean release build does not contain the experimental patches.
+    printf 'no\n' | ELFUSE_USBDEV_REAL_RESET=0 ELFUSE_USBDEV_TRACE=0 \
+        "$ROOT/runtime/elfuse" --timeout 30 --sysroot "$ROOT/sysroot" \
+        --workdir /opt/debugserver --clear-env \
+        --env LD_LIBRARY_PATH=/opt/debugserver --env PATH=/usr/bin:/bin \
+        --env LANG=C "$ROOT/sysroot/opt/debugserver/DebugServerConsole.elf" "$@"
+}
+
+if [ "${0##*/}" = DebugServerConsole.elf ]; then
+    command=run
+else
+    command=${1:---help}
+    [ "$#" -eq 0 ] || shift
+fi
+case "$command" in
+    --help|-h) usage ;;
+    help)
+        [ "$#" -eq 0 ] || { usage >&2; exit 2; }
+        run_server --help
+        ;;
+    list)
+        [ "$#" -eq 0 ] || { usage >&2; exit 2; }
+        run_server -list-ice
+        ;;
+    activate)
+        host_check || exit 1
+        exec "$ROOT/runtime/cklink-usb" --activate "$@"
+        ;;
+    check)
+        host_check || exit 1
+        "$ROOT/runtime/cklink-usb" --require-single-normal "$@" || exit 1
+        run_server -arch csky -setcdi 2 -setclk 2500k -check-target -skip-enter --debug connect
+        ;;
+    run)
+        # Use elfuse's default watchdog for an explicitly requested server.
+        host_check || exit 1
+        printf 'no\n' | ELFUSE_USBDEV_REAL_RESET=0 ELFUSE_USBDEV_TRACE=0 \
+            "$ROOT/runtime/elfuse" --sysroot "$ROOT/sysroot" \
+            --workdir /opt/debugserver --clear-env \
+            --env LD_LIBRARY_PATH=/opt/debugserver --env PATH=/usr/bin:/bin \
+            --env LANG=C "$ROOT/sysroot/opt/debugserver/DebugServerConsole.elf" "$@"
+        ;;
+    doctor)
+        if [ "$#" -gt 1 ] || { [ "$#" -eq 1 ] && [ "$1" != --offline ]; }; then
+            usage >&2; exit 2
+        fi
+        host_check || exit 1
+        for signed in runtime/elfuse runtime/cklink-usb runtime/lib/libusb-1.0.0.dylib; do
+            /usr/bin/codesign --verify "$ROOT/$signed" || exit 1
+        done
+        entitlements=$(/usr/bin/codesign -d --entitlements :- "$ROOT/runtime/elfuse" 2>/dev/null) || exit 1
+        printf '%s\n' "$entitlements" | /usr/bin/grep -q 'com.apple.security.hypervisor' || exit 1
+        (cd "$ROOT" && /usr/bin/shasum -a 256 -c SHA256SUMS >/dev/null) || exit 1
+        echo 'Host, signatures, Hypervisor entitlement and file checksums: OK (ad hoc signed, not notarized).'
+        [ "$#" -eq 1 ] || "$ROOT/runtime/cklink-usb" --inspect || exit 1
+        ;;
+    *) usage >&2; exit 2 ;;
+esac

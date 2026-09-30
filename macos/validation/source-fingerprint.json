@@ -1,0 +1,85 @@
+{
+  "sha256": "3278363ef56ed51cde7c70f0fff30ae15f78a803dfbcdf6252f566bc7991d0c7",
+  "entries": [
+    {
+      "path": "README.md",
+      "sha256": "0cf9402e590f6e8ff959bed4a1e63a4d7751d57e326c9ffacd91b9055c674d70",
+      "mode": 420
+    },
+    {
+      "path": "README.zh-CN.md",
+      "sha256": "5aa2ccdb0e8c3c523796420ec9e5be48449c00c3f940dce2e59d7ea870db6db0",
+      "mode": 420
+    },
+    {
+      "path": "macos/BUILD.md",
+      "sha256": "a4f1c207563b85e65ec6d41e3e3100686d1808c394067d8e633cc0a91bb86910",
+      "mode": 420
+    },
+    {
+      "path": "macos/LICENSE-MIT",
+      "sha256": "ff001bec973408a3d0a9fe093653fa03cb28a01dff4d375e310854f0ca0827d7",
+      "mode": 420
+    },
+    {
+      "path": "macos/README.md",
+      "sha256": "d1fa4ab6d9676218f05d476d3b8afc8a64cd318295ee53d2a56d1c1cd29ab4cb",
+      "mode": 420
+    },
+    {
+      "path": "macos/cklink-usb.c",
+      "sha256": "5847fe0d5d72a5244649cd133aa54741e78888cdef448cb2dd0254b79e3c2141",
+      "mode": 420
+    },
+    {
+      "path": "macos/debugserver",
+      "sha256": "9d948246aae82334af440276b77bf415be2a4b110a6a83884e1286be8ca83d4c",
+      "mode": 493
+    },
+    {
+      "path": "macos/macos14-compat.patch",
+      "sha256": "c7aeda8960f3f6e440e528f1d7df8b79135dedefe654a8c9793f3c5f40d3ddc8",
+      "mode": 420
+    },
+    {
+      "path": "macos/tests/fake-usb.c",
+      "sha256": "41b28e431bdf4e98f17a20b97dd75eeba16594171c923878f9874793b04eef0e",
+      "mode": 420
+    },
+    {
+      "path": "macos/tests/test_launcher.py",
+      "sha256": "0dee84239b3311a506b71a15774316071ac28ac97247cf8511e026399ab5a156",
+      "mode": 420
+    },
+    {
+      "path": "macos/tests/test_usb.py",
+      "sha256": "a48dcd8eef36f59767c9f60aa4a0cca6846825c2e252eb2a419b97f9404d58da",
+      "mode": 420
+    },
+    {
+      "path": "scripts/build-native.sh",
+      "sha256": "3c016bef2fd475a70a14bde38c5f4d5d0180d9185569afac3948ec375e60bf8a",
+      "mode": 493
+    },
+    {
+      "path": "scripts/package-macos.py",
+      "sha256": "2d0a5b507a52f3075ebf2754cb326145692c95132c80618f0cc0ebfcb90266a7",
+      "mode": 420
+    },
+    {
+      "path": "scripts/smoke-macos.py",
+      "sha256": "829c0cdd4288772180f7224cc6b2704c4b23feb0d9ab88e2fc0f822024fc6492",
+      "mode": 420
+    },
+    {
+      "path": "scripts/test_package_macos.py",
+      "sha256": "c0dfc4dbb173a3e6abd7625f48677f5478325d47062d5e20ddfa4018699e6b8e",
+      "mode": 420
+    },
+    {
+      "path": "scripts/verify-package.py",
+      "sha256": "9103623cc66e5541ea248b95732caddf6c970f85d7c542b104a68d1932f97d4d",
+      "mode": 420
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 
 Prebuilt XuanTie DebugServer packages for connecting GDB and other debug clients to XuanTie / C-SKY targets through supported debug probes.
 
-This repository stores binary release archives for Linux x86_64 and Windows hosts. The Linux package includes `DebugServerConsole.elf`, shared libraries, Ck-Link firmware files, target-description XML files, and example client code.
+This repository stores binary release archives for Linux x86_64, Windows, and a local macOS arm64 CLI bundle. The Linux package includes `DebugServerConsole.elf`, shared libraries, Ck-Link firmware files, target-description XML files, and example client code.
 
 ## Repository Contents
 
@@ -12,6 +12,7 @@ This repository stores binary release archives for Linux x86_64 and Windows host
 | --- | --- | --- | --- | --- |
 | `XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.tar.gz` | Linux x86_64 | Direct `XUANTIE_DebugServer/` package tree | Manual install package | `226C930FA42BDE56387E04945EC3A4CA9BFA70117D485971C8E9B06DCA7B6A51` |
 | `XuanTie-DebugServer-windows-V5.18.10-20260603-2008.zip` | Windows | InstallShield installer bundle | Extract and run `setup.exe` | `588C5919441C9D6D5CFC18CAB2DB88147ACAB57ABBC06FDD437DBB6B6AC10C8F` |
+| `XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz` | macOS arm64 14.4+ | elfuse, guest sysroot, vendor payload, native USB helper | Local offline CLI bundle; Rosetta required | See adjacent `.sha256` file |
 
 The release version is `V5.18.10`. The release date is `20260603`, taken from the upstream package filenames.
 
@@ -42,6 +43,29 @@ Expand-Archive .\XuanTie-DebugServer-windows-V5.18.10-20260603-2008.zip -Destina
 ```
 
 Follow the installer prompts. After installation, add the installed DebugServer directory to the Windows user or system `Path` environment variable if the installer does not do it automatically.
+
+## macOS arm64 Local Release
+
+```sh
+shasum -a 256 -c XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz.sha256
+tar -xzf XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz
+./XuanTie-DebugServer-V5.18.10-macos-arm64-r1/bin/debugserver doctor --offline
+```
+
+The bundle includes signed elfuse, Debian amd64 libraries and a native USB helper;
+it needs Apple's Rosetta runtime, but no Homebrew, Python, Docker or VM to run.
+Use `debugserver doctor` for read-only USB inspection. `debugserver activate`
+explicitly selects configuration 1 once for an unconfigured `c510:b211` CK-Link
+loader; then allow the accessory in macOS and confirm normal `32bf:b210` mode
+with `debugserver list`. A stale loader session can require a full probe power
+disconnect and Mac-side adapter reconnect. No automatic activation or experimental
+real-reset patch is included.
+
+The prior CK803SG target-register check passed with one working app 2.32 probe.
+The clean release build is smoke-tested separately; hardware activation, GDB,
+stepping and flashing have not been validated for this archive. See
+[Mac usage and proof limits](macos/README.md) and [rebuild instructions](macos/BUILD.md).
+This is a local archive, ad hoc signed and not notarized; no public release was created.
 
 ## Basic Usage
 

@@ -1,0 +1,65 @@
+diff --git a/src/core/rosetta.h b/src/core/rosetta.h
+index 735c054..32efe34 100644
+--- a/src/core/rosetta.h
++++ b/src/core/rosetta.h
+@@ -55,6 +55,7 @@
+  * VZ Linux VM.
+  */
+ #define ROSETTA_VZ_CHECK 0x80456125 /* Returns 69-byte signature */
++#define ROSETTA_VZ_CHECK_LEGACY 0x80456122 /* macOS 14 Rosetta probe */
+ #define ROSETTA_VZ_CAPS 0x80806123  /* Returns 128-byte capability blob */
+ #define ROSETTA_VZ_ACTIVATE 0x6124  /* Activate VZ mode (just returns 1) */
+ 
+diff --git a/src/syscall/io.c b/src/syscall/io.c
+index 76fcbbb..acb6728 100644
+--- a/src/syscall/io.c
++++ b/src/syscall/io.c
+@@ -957,7 +957,9 @@ static bool rosetta_ioctl_target_fd(guest_t *g, int host_fd)
+ /* Returns true if request matches one of the Rosetta VZ probe ioctls. */
+ static bool rosetta_vz_request(uint64_t request)
+ {
+-    return request == ROSETTA_VZ_CHECK || request == ROSETTA_VZ_CAPS ||
++    return request == ROSETTA_VZ_CHECK ||
++           request == ROSETTA_VZ_CHECK_LEGACY ||
++           request == ROSETTA_VZ_CAPS ||
+            request == ROSETTA_VZ_ACTIVATE;
+ }
+ 
+@@ -969,7 +971,8 @@ static bool rosetta_vz_request(uint64_t request)
+ static int64_t rosetta_vz_ioctl(guest_t *g, uint64_t request, uint64_t arg)
+ {
+     switch (request) {
+-    case ROSETTA_VZ_CHECK: {
++    case ROSETTA_VZ_CHECK:
++    case ROSETTA_VZ_CHECK_LEGACY: {
+         static const char rosetta_sig[ROSETTA_VZ_SIG_LEN] =
+             "Our hard work\nby these words guarded\n"
+             "please don't steal\n\xc2\xa9 Apple Inc";
+diff --git a/src/syscall/poll.c b/src/syscall/poll.c
+index 442396d..8e0b277 100644
+--- a/src/syscall/poll.c
++++ b/src/syscall/poll.c
+@@ -369,7 +369,7 @@ int64_t sys_ppoll(guest_t *g,
+             int gfd = guest_fds[i].fd;
+             const char *type = "?";
+             if (RANGE_CHECK(gfd, 0, FD_TABLE_SIZE)) {
+-                switch (fd_table[gfd].type) {
++                switch ((int) fd_table[gfd].type) {
+                 case FD_EVENTFD:
+                     type = "efd";
+                     break;
+diff --git a/src/syscall/syscall.c b/src/syscall/syscall.c
+index 864db59..2d5f19a 100644
+--- a/src/syscall/syscall.c
++++ b/src/syscall/syscall.c
+@@ -1445,7 +1445,9 @@ static int64_t sc_prctl(guest_t *g,
+             return -LINUX_EINVAL;
+         if (current_thread) {
+             uint64_t actlr = 0;
+-            hv_vcpu_get_sys_reg(current_thread->vcpu, HV_SYS_REG_ACTLR_EL1,
++            /* The SDK marks its enumerator macOS 15-only even though this
++             * stable encoding is also probed on older macOS hosts. */
++            hv_vcpu_get_sys_reg(current_thread->vcpu, (hv_sys_reg_t) 0xc081,
+                                 &actlr);
+             return (actlr & (1ULL << 1)) ? LINUX_PR_SET_MEM_MODEL_TSO
+                                          : LINUX_PR_SET_MEM_MODEL_DEFAULT;

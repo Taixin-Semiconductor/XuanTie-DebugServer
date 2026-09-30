@@ -1,0 +1,41 @@
+{
+  "archive": "XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz",
+  "sha256": "cfaf90556246cde0f2d11de045c6ee2472c0d2fbf0e02984c95504db11109445",
+  "checks": {
+    "extract": {
+      "exit": 0,
+      "expected_exit": 0
+    },
+    "manifest-before": {
+      "exit": 0,
+      "expected_exit": 0
+    },
+    "doctor-offline": {
+      "exit": 0,
+      "expected_exit": 0
+    },
+    "vendor-help": {
+      "exit": 255,
+      "expected_exit": 255
+    },
+    "guest-dependencies": {
+      "exit": 0,
+      "expected_exit": 0
+    },
+    "usb-helper-help": {
+      "exit": 0,
+      "expected_exit": 0
+    },
+    "native-load-paths": {
+      "exit": 0,
+      "expected_exit": 0
+    },
+    "manifest-after": {
+      "exit": 0,
+      "expected_exit": 0
+    }
+  },
+  "result": "pass",
+  "usb_actions": "none; helper help only, doctor used --offline",
+  "hardware_retest": false
+}
