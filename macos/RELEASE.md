@@ -1,46 +1,43 @@
-# Local release validation — 2026-09-30
+# macOS arm64 r2 release validation
 
-Archive: `XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz`
+Archive: XuanTie-DebugServer-V5.18.10-macos-arm64-r2.tar.gz
+Size: 38,882,767 bytes
+SHA-256: baad7202b980eeff48d33a84f0a8a1758c3dbb3a9fd3eff5a41b1a5879474c30
 
-Size: 39,049,517 bytes (about 37.2 MiB)
-
-SHA-256: `cfaf90556246cde0f2d11de045c6ee2472c0d2fbf0e02984c95504db11109445`
-
-Clean elfuse source: `5027e21c0e8c49bfd54bfa6aec7c8b379e91d6fb`, with only
-`macos14-compat.patch`. Release elfuse SHA-256:
-`b541571f585127cb8c735c31952bd2e8072bab0d951cc9102167322204a9e461`.
-Native USB helper and libusb 1.0.30 use relative load paths and ad hoc signatures.
-elfuse has the Hypervisor entitlement. The archive includes the pinned vendor
-payload, frozen Debian amd64 sysroot, source/license material and integrity metadata.
+The archive was prepared from the checksum-verified r1 archive
+XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz (SHA-256
+cfaf90556246cde0f2d11de045c6ee2472c0d2fbf0e02984c95504db11109445). The r2
+change adds 127.0.0.1 elfuse to sysroot/etc/hosts. The vendor executable,
+launcher, native USB helper, elfuse runtime and other binary payload are
+retained from r1.
 
 ## Validation
 
-- Native builds, code signatures and elfuse Hypervisor entitlement passed.
-- 16 mocked USB guard and launcher tests passed; no physical USB calls occurred.
-- 11 packaging/integrity tests passed, including archive traversal rejection,
-  changed file/link/mode detection and pinned source/image checks.
-- Eight final fresh-extraction checks passed in a path containing spaces:
-  extraction, full manifest before execution, offline doctor, guest vendor help
-  (its expected exit 255), guest loader dependencies, USB helper help, native
-  library load paths and full manifest after execution.
-- Independent release review approved the final archive and the 16 source files
-  identified by fingerprint
-  `3278363ef56ed51cde7c70f0fff30ae15f78a803dfbcdf6252f566bc7991d0c7`.
-  The reviewer independently verified archive/tree equality and 5,537 manifest
-  entries. A misleading wall-clock deadline claim was corrected; elfuse's timeout
-  option is a vCPU watchdog, not a process execution deadline.
+- The r1 source archive checksum was verified before extraction.
+- Fresh r2 extraction passed the package manifest and SHA256SUMS checks:
+  5,538 entries before packaging and 5,538 after extraction.
+- The guest hostname mapping was checked in the fresh extraction.
+- Offline doctor and vendor help passed on the fresh extraction; vendor help
+  returned its expected exit status 255.
+- The SDKTools preparation tests cover payload retention, the exact loopback
+  mapping, integrity regeneration, safe extraction, checksum rejection and
+  absence of an external checksum sidecar.
 
-The final smoke report is [validation/smoke-result.json](validation/smoke-result.json).
-Source fingerprints are in [validation/source-fingerprint.json](validation/source-fingerprint.json).
-Commands can be reproduced with [BUILD.md](BUILD.md), the scripts and mock tests.
+## Separate source-prototype evidence
 
-## Proof limits
+A source prototype on macOS 14.8.7 arm64 with CK-Link Lite V2 app 2.32
+(serial suffix 58D8) and a powered CK803SG completed GDB register, stack and
+bounded memory inspection. A hardware breakpoint at main+2 (0x20005B42) was
+hit by one instruction step from 0x20005B40. The breakpoint was removed and
+GDB disconnected. This is source-prototype evidence and does not validate the
+canonical r2 archive's packaged binaries against hardware.
 
-The earlier working probe's CK803SG target check passed on macOS/elfuse and the
-Linux VM. This clean release removes the optional trace/reset diagnostics from
-that prior runtime. No release hardware activation or target retest was performed.
-GDB, breakpoints, stepping, flashing, another Mac and general probe support remain
-unvalidated. No USB configuration, reset, firmware write or target operation was
-performed while assembling or smoke-testing this release.
+Physical probe activation, hardware GDB use of the canonical r2 archive,
+flashing, another Mac and general probe compatibility remain unvalidated. No
+firmware or target operation was performed while preparing the archive.
 
-This is a local archive. No commit, push or public release was made.
+## Rebuild
+
+See [BUILD.md](BUILD.md). The package builder reports the archive SHA-256; the
+repository READMEs record the release archive digest. Package-internal
+manifest.json and SHA256SUMS cover files and symlinks inside the bundle.

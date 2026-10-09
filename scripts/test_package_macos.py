@@ -153,6 +153,45 @@ class VendorArchiveSafetyTests(unittest.TestCase):
                 packager.safe_extract_vendor(archive_path, base / "unpacked")
 
 
+class ReleaseArchiveOutputTests(unittest.TestCase):
+    def test_release_archive_returns_digest_without_external_sidecar(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            package = base / "XuanTie-DebugServer-test"
+            package.mkdir()
+            (package / "README.md").write_text("bundle fixture\n", encoding="utf-8")
+            archive = base / (package.name + ".tar.gz")
+
+            digest = packager.create_release_archive(package, archive)
+
+            self.assertEqual(digest, packager.hash_file(archive))
+            self.assertFalse(archive.with_suffix(archive.suffix + ".sha256").exists())
+            with tarfile.open(archive, "r:gz") as bundle:
+                self.assertIn(package.name + "/README.md", bundle.getnames())
+
+
+class PackageReadmeIdentityTests(unittest.TestCase):
+    def test_r1_base_bundle_uses_r1_facts_and_selected_identity(self) -> None:
+        template_path = SCRIPT_DIR.parent / "macos" / "README-r1.md"
+        template = template_path.read_text(encoding="utf-8")
+
+        rendered = packager.package_readme_contents(
+            template, "XuanTie-DebugServer-V5.18.10-macos-arm64-r1"
+        )
+
+        self.assertEqual(rendered.splitlines()[0], "# XuanTie DebugServer V5.18.10 — macOS arm64 r1")
+        self.assertIn("does not contain the mapping 127.0.0.1 elfuse", rendered)
+        self.assertNotIn("baad7202b980eeff48d33a84f0a8a1758c3dbb3a9fd3eff5a41b1a5879474c30", rendered)
+        self.assertNotIn("canonical r2 archive passed", rendered.lower())
+
+    def test_base_packager_rejects_r2_identity(self) -> None:
+        with self.assertRaisesRegex(packager.PackageError, "derive r2 with the pinned r2 helper"):
+            packager.package_readme_contents(
+                "# XuanTie DebugServer V5.18.10 — macOS arm64 r2\nbody\n",
+                "XuanTie-DebugServer-V5.18.10-macos-arm64-r2",
+            )
+
+
 class PackageCliTests(unittest.TestCase):
     def test_default_version_and_exact_output_directory_name(self) -> None:
         args = packager.parse_args([

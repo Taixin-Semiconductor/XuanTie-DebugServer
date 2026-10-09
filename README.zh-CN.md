@@ -4,7 +4,7 @@
 
 本仓库保存玄铁 DebugServer 预编译二进制包，用于让 GDB 或其他调试客户端通过支持的调试器连接玄铁 / C-SKY 目标芯片。
 
-本仓库包含 Linux x86_64、Windows 主机版发布包，以及本地 macOS arm64 命令行包。Linux 包中包含 `DebugServerConsole.elf`、共享库、Ck-Link 固件文件、目标描述 XML 文件以及示例客户端代码。
+本仓库包含 Linux x86_64、Windows 主机版发布包，以及 macOS arm64 命令行包。Linux 包中包含 `DebugServerConsole.elf`、共享库、Ck-Link 固件文件、目标描述 XML 文件以及示例客户端代码。
 
 ## 仓库内容
 
@@ -12,7 +12,8 @@
 | --- | --- | --- | --- | --- |
 | `XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.tar.gz` | Linux x86_64 | 直接可解压的 `XUANTIE_DebugServer/` 目录树 | 手动安装包 | `226C930FA42BDE56387E04945EC3A4CA9BFA70117D485971C8E9B06DCA7B6A51` |
 | `XuanTie-DebugServer-windows-V5.18.10-20260603-2008.zip` | Windows | InstallShield 安装包 | 解压后运行 `setup.exe` | `588C5919441C9D6D5CFC18CAB2DB88147ACAB57ABBC06FDD437DBB6B6AC10C8F` |
-| `XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz` | macOS arm64 14.4+ | elfuse、Linux 运行库、厂商程序、原生 USB 工具 | 本地离线命令行包；需要 Rosetta | 见同名 `.sha256` 文件 |
+| `XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz` | macOS arm64 14.4+ | elfuse、Linux 运行库、厂商程序、原生 USB 工具 | 保留为 r1 源压缩包 | `cfaf90556246cde0f2d11de045c6ee2472c0d2fbf0e02984c95504db11109445` |
+| `XuanTie-DebugServer-V5.18.10-macos-arm64-r2.tar.gz` | macOS arm64 14.4+ | elfuse、Linux 运行库、厂商程序、原生 USB 工具 | 规范客体主机名映射包；需要 Rosetta | `baad7202b980eeff48d33a84f0a8a1758c3dbb3a9fd3eff5a41b1a5879474c30` |
 
 发布版本为 `V5.18.10`。发布日期 `20260603` 来自上游包文件名。
 
@@ -44,26 +45,29 @@ Expand-Archive .\XuanTie-DebugServer-windows-V5.18.10-20260603-2008.zip -Destina
 
 随后按安装器提示操作。安装完成后，如果安装器没有自动配置环境变量，请将 DebugServer 安装目录加入 Windows 用户或系统 `Path` 环境变量。
 
-## macOS arm64 本地包
+## macOS arm64 r2
 
-```sh
-shasum -a 256 -c XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz.sha256
-tar -xzf XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz
-./XuanTie-DebugServer-V5.18.10-macos-arm64-r1/bin/debugserver doctor --offline
-```
+先将压缩包 SHA-256 与“仓库内容”表中的值核对，再解压并运行离线检查：
 
-包内提供已签名的 elfuse、Debian amd64 运行库和原生 USB 工具；运行时需要
-Apple Rosetta，不依赖 Homebrew、Python、Docker 或虚拟机。
-`debugserver doctor` 只读检查 USB 状态。对于配置为 0 的 `c510:b211`
-CK-Link 加载器，显式执行 `debugserver activate` 会发送一次标准配置请求。
-在 macOS 中允许连接配件后，用 `debugserver list` 确认正常 `32bf:b210`
-模式。残留的加载器会话可能需要完全断开探针供电并重新插拔 Mac 端转接器。
-不会自动激活，也未包含实验性的真实 USB 复位补丁。
+~~~sh
+printf '%s  %s\n' \
+  'baad7202b980eeff48d33a84f0a8a1758c3dbb3a9fd3eff5a41b1a5879474c30' \
+  'XuanTie-DebugServer-V5.18.10-macos-arm64-r2.tar.gz' | shasum -a 256 -c -
+tar -xzf XuanTie-DebugServer-V5.18.10-macos-arm64-r2.tar.gz
+./XuanTie-DebugServer-V5.18.10-macos-arm64-r2/bin/debugserver doctor --offline
+~~~
 
-此前使用正常工作的 app 2.32 探针已通过 CK803SG 目标寄存器检查；本次干净
-构建的发布包另行完成运行冒烟检查，尚未对该压缩包重测硬件激活、GDB、单步
-或烧录。详见 [Mac 使用说明与验证范围](macos/README.md) 和
-[重新构建步骤](macos/BUILD.md)。这是本地临时签名包，未公证，也未创建公开发布。
+压缩包包含 elfuse、Debian amd64 运行库、厂商程序和原生 USB 工具。运行时需要
+Apple Rosetta，不需要 Homebrew、Python、Docker 或虚拟机。r2 客体 sysroot 在
+sysroot/etc/hosts 中将 elfuse 映射到 127.0.0.1；厂商程序、启动器、原生 USB
+工具和 elfuse 运行时均沿用 r1。
+
+单独的源码原型已使用 CK-Link Lite V2 app 2.32 完成 CK803SG GDB 寄存器和栈
+检查，以及一次硬件断点单指令步进。这是原型验证，不代表 r2 规范压缩包
+通过了硬件验证。压缩包已通过全新解压、manifest 和 SHA256SUMS 检查、离线就绪
+检查以及厂商帮助输出检查。该 r2 压缩包尚未通过实体探针激活、硬件 GDB、
+烧录、其他 Mac 或通用探针兼容性验证。详见[Mac 使用说明与验证范围](macos/README.md)
+和[重新构建步骤](macos/BUILD.md)。
 
 ## 基本用法
 

@@ -1,18 +1,48 @@
-# Rebuild the local Mac bundle
+# Rebuild the macOS arm64 bundle
+
+## Reproduce the canonical r2 archive
+
+The canonical r2 archive is derived from the checked-in r1 archive whose
+SHA-256 is recorded in the Repository Contents table. From the repository
+root, use the self-contained helper in this repository:
+
+~~~sh
+python3 scripts/prepare-debugserver-r2.py \
+  --r1-archive XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz \
+  --output /tmp/XuanTie-DebugServer-V5.18.10-macos-arm64-r2.tar.gz
+shasum -a 256 /tmp/XuanTie-DebugServer-V5.18.10-macos-arm64-r2.tar.gz
+~~~
+
+The helper verifies the pinned r1 archive SHA-256, adds 127.0.0.1 elfuse to
+sysroot/etc/hosts, preserves the binary payload, writes the r2 README and
+RELEASE-NOTES.md, regenerates manifest.json and SHA256SUMS, then freshly
+extracts the archive and verifies integrity, offline doctor and vendor help.
+The output path must not already exist. The checked-in r1 archive is the exact
+input for reproducing the canonical r2 digest.
+
+Run the focused tests from the repository root:
+
+~~~sh
+python3 -m unittest scripts.test_package_macos scripts.test_prepare_debugserver_r2 -v
+~~~
+
+## Build a new r1 base bundle from source
+
+This is a separate source-build workflow. A newly built r1 archive will usually
+have a different digest and is not accepted by the pinned r2 helper until that
+new input is reviewed and the helper's r1 SHA-256 pin is deliberately updated.
+Do not substitute a new r1 build when reproducing the canonical r2 archive.
 
 Build prerequisites: native Apple Silicon macOS 14.4+, Xcode command line
-tools, Python 3, Git, Homebrew binutils and libusb **1.0.30**. End users running
-the resulting archive need only the host prerequisites in README.md.
+tools, Python 3, Git, Homebrew binutils and libusb 1.0.30. The r1 source package
+uses the existing tested Debian sysroot at
+../csky-gcc-build/elfuse-debugserver-poc/sysroot. Its image digest and installed
+package versions are checked and recorded; running apt today does not reproduce
+that frozen input.
 
-The local first release uses the existing tested Debian sysroot at
-`../csky-gcc-build/elfuse-debugserver-poc/sysroot`. Its image digest and installed
-package versions are checked/recorded; this is a frozen input, not a claim that
-running apt today reproduces the same packages. An extracted release sysroot
-can also serve as that frozen input.
+From the repository root, choose new build/output directories:
 
-From the repository root, select new build/output directories:
-
-```sh
+~~~sh
 git clone https://github.com/sysprog21/elfuse.git /tmp/debugserver-elfuse
 git -C /tmp/debugserver-elfuse switch --detach 5027e21c0e8c49bfd54bfa6aec7c8b379e91d6fb
 sh scripts/build-native.sh /tmp/debugserver-build /tmp/debugserver-elfuse /opt/homebrew/opt/libusb
@@ -25,17 +55,8 @@ python3 scripts/package-macos.py \
   --libusb /tmp/debugserver-build/runtime/lib/libusb-1.0.0.dylib \
   --libusb-source-archive /tmp/libusb-1.0.30.tar.bz2 \
   --output /tmp/XuanTie-DebugServer-V5.18.10-macos-arm64-r1
-```
+~~~
 
-The builder exports only the pinned Git tree, ignoring developer working-tree
-changes, then applies `macos14-compat.patch` and builds/signs elfuse with its
-Hypervisor entitlement. Native helper load paths use `@rpath`; the bundled
-libusb install name is set before signing. `package-macos.py` verifies archive
-hashes, installs the vendor payload afresh, preserves guest libraries/licenses,
-records source/hashes and writes a `.tar.gz` plus adjacent `.sha256` file.
-
-Before treating a new archive as tested, extract it to a different path,
-verify the manifest, run `debugserver doctor --offline` and vendor help, and
-inspect the guest loader's dependency list. Run the mock safety tests with
-`python3 -m unittest discover -s macos/tests -v`. No mock test touches USB.
-Hardware activation and target validation are separate, intentional actions.
+This creates a new r1 base archive and prints its SHA-256. It does not produce
+the canonical r2 archive by itself. Hardware activation and target validation
+are separate actions; the offline r2 helper does not access USB devices.

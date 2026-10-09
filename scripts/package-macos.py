@@ -514,15 +514,31 @@ def _build_provenance(
     }
 
 
-def package(args: argparse.Namespace) -> tuple[Path, Path, Path]:
+def package_readme_contents(template: str, package_name: str) -> str:
+    match = re.fullmatch(r"XuanTie-DebugServer-(.+)-macos-arm64-(r1)", package_name)
+    if match is None:
+        raise PackageError("package-macos.py builds the r1 base bundle; derive r2 with the pinned r2 helper")
+    version, identity = match.groups()
+    _, separator, body = template.partition("\n")
+    if not separator or not template.startswith("# XuanTie DebugServer "):
+        raise PackageError("macOS base package README needs a title and body")
+    return f"# XuanTie DebugServer {version} — macOS arm64 {identity}\n" + body
+
+
+def create_release_archive(package_dir: Path, archive_path: Path) -> str:
+    with tarfile.open(archive_path, mode="w:gz", format=tarfile.PAX_FORMAT) as bundle:
+        bundle.add(package_dir, arcname=package_dir.name, recursive=True)
+    return hash_file(archive_path)
+
+
+def package(args: argparse.Namespace) -> tuple[Path, Path, str]:
     version = args.version
     package_name = f"XuanTie-DebugServer-{version}"
     output = args.output.absolute()
     if output.name != package_name:
         raise PackageError(f"--output directory must be named exactly {package_name}")
     archive_output = output.with_name(output.name + ".tar.gz")
-    checksum_output = archive_output.with_name(archive_output.name + ".sha256")
-    for path in (output, archive_output, checksum_output):
+    for path in (output, archive_output):
         if os.path.lexists(path):
             raise PackageError(f"refusing to reuse existing output: {path}")
 
@@ -540,7 +556,8 @@ def package(args: argparse.Namespace) -> tuple[Path, Path, Path]:
     library_source = _require_regular_file(args.libusb, "native libusb library")
     library_source_archive = _require_regular_file(args.libusb_source_archive, "libusb source archive")
     debugserver = _require_regular_file(REPO_ROOT / "macos" / "debugserver", "macOS debugserver", executable=True)
-    readme = _require_regular_file(REPO_ROOT / "macos" / "README.md", "macOS release README")
+    readme = _require_regular_file(REPO_ROOT / "macos" / "README-r1.md", "macOS r1 base README")
+    readme_contents = package_readme_contents(readme.read_text(encoding="utf-8"), package_name)
     compat_patch = _require_regular_file(REPO_ROOT / "macos" / "macos14-compat.patch", "elfuse compatibility patch")
     helper_source = _require_regular_file(REPO_ROOT / "macos" / "cklink-usb.c", "cklink-usb source")
     native_license = _require_regular_file(REPO_ROOT / "macos" / "LICENSE-MIT", "native macOS MIT license")
@@ -599,7 +616,9 @@ def package(args: argparse.Namespace) -> tuple[Path, Path, Path]:
                 package_dir / "source",
             )
             _copy_file(library_source.resolve(), package_dir / "runtime" / "lib" / "libusb-1.0.0.dylib")
-            _copy_file(readme, package_dir / "README.md")
+            embedded_readme = package_dir / "README.md"
+            embedded_readme.write_text(readme_contents, encoding="utf-8")
+            embedded_readme.chmod(0o644)
 
             _copy_tree(
                 sysroot,
@@ -665,22 +684,14 @@ def package(args: argparse.Namespace) -> tuple[Path, Path, Path]:
             _load_verifier()(package_dir)
 
             tar_stage = work / archive_output.name
-            with tarfile.open(tar_stage, mode="w:gz", format=tarfile.PAX_FORMAT) as bundle:
-                bundle.add(package_dir, arcname=package_name, recursive=True)
-            checksum_stage = work / checksum_output.name
-            checksum_stage.write_text(
-                f"{hash_file(tar_stage)}  {archive_output.name}\n",
-                encoding="ascii",
-            )
+            archive_sha256 = create_release_archive(package_dir, tar_stage)
 
-            if any(os.path.lexists(path) for path in (output, archive_output, checksum_output)):
+            if any(os.path.lexists(path) for path in (output, archive_output)):
                 raise PackageError("an output path appeared during packaging; refusing to overwrite it")
             os.rename(package_dir, output)
             published.append(output)
             os.rename(tar_stage, archive_output)
             published.append(archive_output)
-            os.rename(checksum_stage, checksum_output)
-            published.append(checksum_output)
     except Exception:
         for path in reversed(published):
             if path.is_dir() and not path.is_symlink():
@@ -688,7 +699,7 @@ def package(args: argparse.Namespace) -> tuple[Path, Path, Path]:
             elif os.path.lexists(path):
                 path.unlink()
         raise
-    return output, archive_output, checksum_output
+    return output, archive_output, archive_sha256
 
 
 def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
@@ -706,13 +717,13 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Iterable[str] | None = None) -> int:
     try:
-        output, archive, checksum = package(parse_args(argv))
+        output, archive, archive_sha256 = package(parse_args(argv))
     except (PackageError, OSError, tarfile.TarError, json.JSONDecodeError, subprocess.SubprocessError) as exc:
         print(f"package-macos: error: {exc}", file=sys.stderr)
         return 1
     print(f"Package directory: {output}")
     print(f"Release archive: {archive}")
-    print(f"Archive checksum: {checksum}")
+    print(f"Archive SHA-256: {archive_sha256}")
     return 0
 
 
