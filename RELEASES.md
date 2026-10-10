@@ -7,7 +7,7 @@ users must download the named binary assets from the release.
 
 ## Current asset set
 
-The release tag is `debugserver-v5.18.10-r2`. Keep the Linux, Windows, macOS
+The current hosted release tag is `untagged-2e0e0fc50c0c16a8970e`. Keep the Linux, Windows, macOS
 r1, and macOS r2 archives as separate assets with their original filenames and
 bytes. r1 is a checksum-pinned build input for reproducing r2; retain it even
 though r2 is the recommended macOS install. The existing package provenance,

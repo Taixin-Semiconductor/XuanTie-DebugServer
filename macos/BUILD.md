@@ -7,7 +7,7 @@ SHA-256 is recorded in the Release Downloads table. From the repository
 root, use the self-contained helper in this repository:
 
 ~~~sh
-curl -fL https://github.com/Taixin-Semiconductor/XuanTie-DebugServer/releases/download/debugserver-v5.18.10-r2/XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz \
+curl -fL https://github.com/Taixin-Semiconductor/XuanTie-DebugServer/releases/download/untagged-2e0e0fc50c0c16a8970e/XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz \
   -o XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz
 python3 scripts/prepare-debugserver-r2.py \
   --r1-archive XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz \
@@ -45,7 +45,7 @@ that frozen input.
 From the repository root, choose new build/output directories:
 
 ~~~sh
-curl -fL https://github.com/Taixin-Semiconductor/XuanTie-DebugServer/releases/download/debugserver-v5.18.10-r2/XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.tar.gz \
+curl -fL https://github.com/Taixin-Semiconductor/XuanTie-DebugServer/releases/download/untagged-2e0e0fc50c0c16a8970e/XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.tar.gz \
   -o XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.tar.gz
 git clone https://github.com/sysprog21/elfuse.git /tmp/debugserver-elfuse
 git -C /tmp/debugserver-elfuse switch --detach 5027e21c0e8c49bfd54bfa6aec7c8b379e91d6fb
