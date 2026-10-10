@@ -1,0 +1,6 @@
+# Downloaded or generated release archives stay outside Git.
+/*.tar.gz
+/*.tar.xz
+/*.zip
+__pycache__/
+*.py[cod]

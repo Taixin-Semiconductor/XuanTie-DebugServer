@@ -4,16 +4,18 @@
 
 Prebuilt XuanTie DebugServer packages for connecting GDB and other debug clients to XuanTie / C-SKY targets through supported debug probes.
 
-This repository stores binary release archives for Linux x86_64, Windows, and a macOS arm64 CLI bundle. The Linux package includes `DebugServerConsole.elf`, shared libraries, Ck-Link firmware files, target-description XML files, and example client code.
+This repository keeps packaging sources, tests, documentation, and release checksums in Git. Binary archives for Linux x86_64, Windows, and macOS arm64 are hosted as versioned [GitHub Release assets](https://github.com/Taixin-Semiconductor/XuanTie-DebugServer/releases/tag/debugserver-v5.18.10-r2); cloning the repository does not download them. The Linux package includes `DebugServerConsole.elf`, shared libraries, Ck-Link firmware files, target-description XML files, and example client code.
 
-## Repository Contents
+## Release Downloads
 
 | Archive | Host system | Contents | Notes | SHA256 |
 | --- | --- | --- | --- | --- |
-| `XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.tar.gz` | Linux x86_64 | Direct `XUANTIE_DebugServer/` package tree | Manual install package | `226C930FA42BDE56387E04945EC3A4CA9BFA70117D485971C8E9B06DCA7B6A51` |
-| `XuanTie-DebugServer-windows-V5.18.10-20260603-2008.zip` | Windows | InstallShield installer bundle | Extract and run `setup.exe` | `588C5919441C9D6D5CFC18CAB2DB88147ACAB57ABBC06FDD437DBB6B6AC10C8F` |
-| `XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz` | macOS arm64 14.4+ | elfuse, guest sysroot, vendor payload, native USB helper | Retained as the r1 source archive | `cfaf90556246cde0f2d11de045c6ee2472c0d2fbf0e02984c95504db11109445` |
-| `XuanTie-DebugServer-V5.18.10-macos-arm64-r2.tar.gz` | macOS arm64 14.4+ | elfuse, guest sysroot, vendor payload, native USB helper | Canonical bundle with guest hostname mapping; Rosetta required | `baad7202b980eeff48d33a84f0a8a1758c3dbb3a9fd3eff5a41b1a5879474c30` |
+| [`XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.tar.gz`](https://github.com/Taixin-Semiconductor/XuanTie-DebugServer/releases/download/debugserver-v5.18.10-r2/XuanTie-DebugServer-linux-x86_64-V5.18.10-20260603.tar.gz) | Linux x86_64 | Direct `XUANTIE_DebugServer/` package tree | Manual install package | `226C930FA42BDE56387E04945EC3A4CA9BFA70117D485971C8E9B06DCA7B6A51` |
+| [`XuanTie-DebugServer-windows-V5.18.10-20260603-2008.zip`](https://github.com/Taixin-Semiconductor/XuanTie-DebugServer/releases/download/debugserver-v5.18.10-r2/XuanTie-DebugServer-windows-V5.18.10-20260603-2008.zip) | Windows | InstallShield installer bundle | Extract and run `setup.exe` | `588C5919441C9D6D5CFC18CAB2DB88147ACAB57ABBC06FDD437DBB6B6AC10C8F` |
+| [`XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz`](https://github.com/Taixin-Semiconductor/XuanTie-DebugServer/releases/download/debugserver-v5.18.10-r2/XuanTie-DebugServer-V5.18.10-macos-arm64-r1.tar.gz) | macOS arm64 14.4+ | elfuse, guest sysroot, vendor payload, native USB helper | Retained as the r1 source archive | `cfaf90556246cde0f2d11de045c6ee2472c0d2fbf0e02984c95504db11109445` |
+| [`XuanTie-DebugServer-V5.18.10-macos-arm64-r2.tar.gz`](https://github.com/Taixin-Semiconductor/XuanTie-DebugServer/releases/download/debugserver-v5.18.10-r2/XuanTie-DebugServer-V5.18.10-macos-arm64-r2.tar.gz) | macOS arm64 14.4+ | elfuse, guest sysroot, vendor payload, native USB helper | Canonical bundle with guest hostname mapping; Rosetta required | `baad7202b980eeff48d33a84f0a8a1758c3dbb3a9fd3eff5a41b1a5879474c30` |
+
+Download the archive for your host using the links above and verify its SHA-256 before following the install steps. [SHA256SUMS](SHA256SUMS) records every asset digest. See [release maintenance](RELEASES.md) for the publishing workflow.
 
 The release version is `V5.18.10`. The release date is `20260603`, taken from the upstream package filenames.
 
@@ -47,7 +49,7 @@ Follow the installer prompts. After installation, add the installed DebugServer 
 
 ## macOS arm64 r2
 
-Verify the archive against the SHA-256 shown in the Repository Contents table,
+Verify the archive against the SHA-256 shown in the Release Downloads table,
 then extract and run its offline readiness check:
 
 ~~~sh
